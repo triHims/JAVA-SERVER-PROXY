@@ -10,7 +10,7 @@ import java.net.MalformedURLException;
 // Import socket to read and write data to socket
 import java.net.Socket;
 // Socket exception can arise when using the socket
-import java.net.SocketException;
+import java.net.SocketException; // This is socketexception
 // URL container to parse url easily
 import java.net.URL;
  // StandardCharsets to convert he default string to byte array
@@ -22,7 +22,7 @@ public class ProxySocketHandler implements Runnable {
 
     Socket boundSocket;
     static String READ_EXCEPTION = "Read Exception";
-    static String BAD_REQUEST = "Bad Request";
+    static String BAD_REQUEST = "Bad Request"; // Bad reqeust const
 
     static int EOF_CHAR = -1;
 
@@ -40,7 +40,9 @@ public class ProxySocketHandler implements Runnable {
 
 
     @Override
-    public void run() {
+    public void run() { // This function is first run 
+        // socket data is read and and translated
+ 
         BufferedInputStream clientInputStream = null;
         BufferedOutputStream clientOutputStream = new BufferedOutputStream(null);
 
