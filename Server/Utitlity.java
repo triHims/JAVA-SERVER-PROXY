@@ -1,36 +1,38 @@
 package Server;
 
-import java.util.Date;
+
+
+import  java.util.Date; // Import date to append date to header
 
 public class Utitlity {
 
-    static String get200Header(String fileName){
+    static String get200Header(String fileName) {
         return String.format("HTTP/1.0 200 OK\r\n" +
                              "Content-Type: %s\r\n" +
                              "Date: %s\r\n" +
-                             "\r\n",contentType(fileName),new Date());
+                             "\r\n", contentType(fileName), new Date());
     }
 
-    static String get404Header(){
+    static String get404Header() {
         return String.format("HTTP/1.0 404 Not Found\r\n" +
                              "Content-Type: text/html\r\n" +
                              "Date: %s\r\n" +
-                             "\r\n",new Date());
+                             "\r\n", new Date());
     }
 
-    static String get403Header(){
+    static String get403Header() {
         return String.format("HTTP/1.0 403 Bad Request\r\n" +
                              "Content-Type: text/html\r\n" +
                              "Date: %s\r\n" +
-                             "\r\n",new Date());
+                             "\r\n", new Date());
     }
 
-    static String contentType(String fileName){
-        int dotLoc = fileName.lastIndexOf('.');
-        if(dotLoc==-1)
+    static String contentType(String fileName) {
+        int locationOfLastDot = fileName.lastIndexOf('.'); // trying to find location of last dot to seprate the extension
+        if (locationOfLastDot == -1)
             return "text/plain";
 
-        String fileType = fileName.substring(dotLoc+1).trim();
+        String fileType = fileName.substring(locationOfLastDot + 1).trim();
 
         return switch (fileType) {
             case ".html", ".htm" -> "text/html";

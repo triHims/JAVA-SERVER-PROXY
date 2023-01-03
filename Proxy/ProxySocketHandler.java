@@ -1,23 +1,33 @@
 package Proxy;
 
-import java.io.*;
+import java.io.BufferedInputStream; // import BufferedInputStream this is used to decrease the reads
+import java.io.BufferedOutputStream; // Bufffered output stream follows the similar suite
+import java.io.ByteArrayOutputStream; // Handy dynamic bytearray
+// default ioexception import
+import java.io.IOException;
+// we are using URL therefore we need MalformedURLException to support it
 import java.net.MalformedURLException;
+// Import socket to read and write data to socket
 import java.net.Socket;
+// Socket exception can arise when using the socket
 import java.net.SocketException;
+// URL container to parse url easily
 import java.net.URL;
+ // StandardCharsets to convert he default string to byte array
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+//default java date class to append dates to the request
 import java.util.Date;
 
-public class ProxySocketHandler implements  Runnable {
+public class ProxySocketHandler implements Runnable {
 
     Socket boundSocket;
     static String READ_EXCEPTION = "Read Exception";
     static String BAD_REQUEST = "Bad Request";
 
-    static  int EOF_CHAR = -1;
-    ProxySocketHandler(Socket boundSocket) throws SocketException {
-        System.out.println("Reset socket time outs");
+    static int EOF_CHAR = -1;
+
+    ProxySocketHandler(Socket boundSocket) {
+        
         this.boundSocket = boundSocket;
         try {
             boundSocket.setSoTimeout(10000);
@@ -42,15 +52,13 @@ public class ProxySocketHandler implements  Runnable {
             clientOutputStream = new BufferedOutputStream(boundSocket.getOutputStream());
 
 
-
-
             var clientInputBuffer = new ByteArrayOutputStream();
 
             try {
                 int readByte = 0;
 
-                while(readByte!=-1){
-                    readByte=clientInputStream.read();
+                while (readByte != -1) {
+                    readByte = clientInputStream.read();
                     clientInputBuffer.write(readByte);
                 }
             } catch (Exception ex) {
@@ -62,7 +70,7 @@ public class ProxySocketHandler implements  Runnable {
             clientInputBuffer.close();
             ProxyPayload proxyRequest = buildProxyRequest(clientInputBuffer);
 
-            try(Socket requestSocket = new Socket(proxyRequest.host(), proxyRequest.port()); ){
+            try (Socket requestSocket = new Socket(proxyRequest.host(), proxyRequest.port())) {
                 requestSocket.setSoTimeout(10000);
                 var requestProxyInputStream = requestSocket.getInputStream();
                 var requestProxyOutputStream = requestSocket.getOutputStream();
@@ -74,13 +82,10 @@ public class ProxySocketHandler implements  Runnable {
                 System.out.println(">  Send Request to remote");
 
 
-
-
-
                 int readByte = 0;
                 System.out.println(">  Waiting for output from remote");
-                while(readByte!=-1){
-                    readByte=requestProxyInputStream.read();
+                while (readByte != -1) {
+                    readByte = requestProxyInputStream.read();
                     clientOutputStream.write(readByte);
                 }
                 requestProxyOutputStream.close();
@@ -90,12 +95,10 @@ public class ProxySocketHandler implements  Runnable {
             }
 
 
-
-        }
-        catch (IOException e) {
-            System.out.println("Got exception "+e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Got exception " + e.getMessage());
             e.printStackTrace();
-            if(clientOutputStream!=null){
+            if (clientOutputStream != null) {
                 try {
 
                     clientOutputStream.write(get502Header().getBytes(StandardCharsets.UTF_8));
@@ -104,8 +107,7 @@ public class ProxySocketHandler implements  Runnable {
                     System.out.println("> ########### Could not write the exception message ");
                     throw new RuntimeException(ex);
                 }
-            }
-            else {
+            } else {
                 System.out.println("Client output stream does not exist ");
                 System.out.println("> ###########  Could not write the exception message ");
                 throw new RuntimeException(e);
@@ -126,54 +128,57 @@ public class ProxySocketHandler implements  Runnable {
         }
 
     }
+
     static String req_builder = "GET %s HTTP/1.1\r\n" +
                                 "Host: %s\r\n" +
                                 "User-Agent: curl/7.85.0\r\n" +
                                 "Accept: */*\r\n" +
                                 "\r\n";
-    ProxyPayload buildProxyRequest(ByteArrayOutputStream outputStream){
+
+    ProxyPayload buildProxyRequest(ByteArrayOutputStream outputStream) {
 
         String[] stringList = outputStream.toString(StandardCharsets.UTF_8).split("\n");
 
 
-        if(stringList.length<1)
+        if (stringList.length < 1)
             throw new RuntimeException(BAD_REQUEST);
 
         String firstLine = stringList[0].strip();
 
         var posColon = firstLine.indexOf(":");
 
-        var url = firstLine.substring(posColon+2).trim();
+        var url = firstLine.substring(posColon + 2).trim();
 
 
-        String host="";
-        int port=80;
-        String path="";
+        String host = "";
+        int port = 80;
+        String path = "";
         try {
-           URL requestUrl = new URL(url);
-           host=requestUrl.getHost();
-           path = requestUrl.getPath();
-           port = (requestUrl.getPort()==-1)?requestUrl.getDefaultPort():requestUrl.getPort();
+            URL requestUrl = new URL(url);
+            host = requestUrl.getHost();
+            path = requestUrl.getPath();
+            port = (requestUrl.getPort() == -1) ? requestUrl.getDefaultPort() : requestUrl.getPort();
         } catch (MalformedURLException e) {
-            throw new RuntimeException(BAD_REQUEST,e);
+            throw new RuntimeException(BAD_REQUEST, e);
         }
 
-        var payload =  String.format(req_builder,path,host);
+        var payload = String.format(req_builder, path, host);
 
 
-        return new ProxyPayload(host,port,payload);
+        return new ProxyPayload(host, port, payload);
 
 
     }
 
-    static String get502Header(){
+    static String get502Header() {
         return String.format("HTTP/1.0 502 Bad Gateway\r\n" +
                              "Content-Type: text/html\r\n" +
                              "Date: %s\r\n" +
-                             "\r\n",new Date());
+                             "\r\n", new Date());
     }
 
 }
 
 
-record ProxyPayload(String host,int port,String payload){};
+record ProxyPayload(String host, int port, String payload) {
+}

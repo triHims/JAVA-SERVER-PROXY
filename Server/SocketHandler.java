@@ -1,13 +1,14 @@
 package Server;
 
 import java.io.*;
-import java.net.Socket;
-import java.net.SocketException;
+import  java.net.Socket;// Import socket to read and write data to socket
+import java.net.SocketException; // Socket exception the exception thown by the socket
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 
-public class SocketHandler implements Runnable {
+  public class SocketHandler implements Runnable {  // Socket handler class  supports multithreading
+    
 
     Socket boundSocket;
 
@@ -17,7 +18,7 @@ public class SocketHandler implements Runnable {
 
     static int EOF_CHAR = -1;
 
-    SocketHandler(Socket boundSocket) throws SocketException {
+    SocketHandler(Socket boundSocket) {
 
         this.boundSocket = boundSocket;
         try {
@@ -33,11 +34,14 @@ public class SocketHandler implements Runnable {
      * This function reads the request and services it
      */
     @Override
-    public void run() {
-        BufferedReader inputStream = null;
+    public void run() { // This funtion is first run 
+        // socket data is read and and translated
+        BufferedReader inSocketInputStream = null;
         BufferedOutputStream outputStream = new BufferedOutputStream(null);
         try {
-            inputStream = new BufferedReader(new InputStreamReader(boundSocket.getInputStream()));
+
+            //This inputstream is wrapped in bufferedreader to minimise the reads
+            inSocketInputStream = new BufferedReader(new InputStreamReader(boundSocket.getInputStream()));
 
 
             outputStream = new BufferedOutputStream(boundSocket.getOutputStream());
@@ -47,10 +51,11 @@ public class SocketHandler implements Runnable {
 
             var stringList = new ArrayList<String>();
 
-            try {
-                while (true) {
-                    line = inputStream.readLine();
-                    if (line ==null || line.trim().length() == 0) {
+            try { // TRy to read the data from the input stream
+
+                while ( true) { // Use unbound while loop managed through brake
+                    line = inSocketInputStream.readLine();
+                    if (line == null || line.trim().length() == 0) {
                         System.out.println("Request Ended");
                         break;
                     }
@@ -58,10 +63,9 @@ public class SocketHandler implements Runnable {
                     stringList.add(line);
 
 
-
-
                 }
-            } catch (Exception ex) {
+            } catch (Exception ex) { // catch all the exceptions and throw RuntimeException instead 
+                // this will effectivily stop the reads
                 throw new RuntimeException(READ_EXCEPTION, ex);
             }
 
@@ -94,8 +98,8 @@ public class SocketHandler implements Runnable {
             outputStream.write(EOF_CHAR);
             outputStream.flush();
             outputStream.close();
-            assert inputStream != null;
-            inputStream.close();
+            assert inSocketInputStream != null;
+            inSocketInputStream.close();
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
             ex.printStackTrace();
@@ -133,7 +137,7 @@ public class SocketHandler implements Runnable {
      * Read the request
      * For get Requests :
      * Try to get the file
-     * If file does not exists throw 404
+     * If file does not exist throw 404
      * Others throw bad request
      *
      * @param arrayList
