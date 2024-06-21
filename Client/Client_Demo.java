@@ -4,7 +4,8 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
  // let us inport the socket for socket api
 import  java.net.Socket;
- // StandardCharsets to convert he default string to byte array
+import java.nio.charset.Charset;
+// StandardCharsets to convert he default string to byte array
 import    java.nio.charset.StandardCharsets;
  // get the scanner to take the input
 import    java.util.Scanner;
@@ -20,17 +21,17 @@ class Client_Demo { // client class
         var consoleInputScanner = new Scanner(System.in);
         var urlInput = consoleInputScanner.next();
 
-        Socket s = new Socket("localhost", 5222); // Define the proxy details here
+        Socket socketToHitForRequest = new Socket("localhost", 5222); // Define the proxy details here
 
-        s.setSoTimeout(10000); // time out of 10 seconds
+        socketToHitForRequest.setSoTimeout(10000); // time out of 10 seconds
 
-        var din = s.getInputStream(); // din is the socket inputstream
-        var dout = s.getOutputStream(); // dout is the  socket  outputstream
+        var din = socketToHitForRequest.getInputStream(); // din is the socket inputstream
+        var dout = socketToHitForRequest.getOutputStream(); // dout is the  socket  outputstream
 
-        dout.write(String.format(req, urlInput)); // writing the payload on input stream
+        dout.write(String.format(req, urlInput).getBytes(StandardCharsets.UTF_8)); // writing the payload on input stream
         dout.write(-1); // writing the eof character to mark the stream end
         dout.flush(); // flush the stream manually
-        s.shutdownOutput();//shutdown the output so that reciever can stop reading
+        socketToHitForRequest.shutdownOutput();//shutdown the output so that reciever can stop reading
         System.out.print("\n\nWaiting for output\n");
 
         var flexibleByteArray = new ByteArrayOutputStream();  // flexible container to read input
@@ -44,10 +45,10 @@ class Client_Demo { // client class
         System.out.println(flexibleByteArray);
 
         dout.close(); // close the output stream as we are done reading the data
-        s.close(); // close the socket  completly
+        socketToHitForRequest.close(); // close the socket  completly
         din.close(); // close the inputstream
 
-         sc.close(); //since we are shutting down close the scanner
+        consoleInputScanner.close(); //since we are shutting down close the scanner
     
     }
 }
